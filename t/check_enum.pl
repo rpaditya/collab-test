@@ -33,7 +33,7 @@ use Net::SIP;
 use Net::SIP::Util 'create_socket_to';
 use Net::SIP::Debug;
 
-require '../lib/monitor.pl';
+require "${ENV{'HOME'}}/lib/monitor.pl";
 our($config);
 $config->{'STEP'} = 3600;
 
