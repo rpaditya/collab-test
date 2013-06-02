@@ -364,7 +364,7 @@ if ( $registrar && $registrar ne '-' ) {
 }
 
 my $stopvar;
-my $callstatus;
+my $callstatus = 100;
 sub final {
   my ($status,$self,%info) = @_;
   my($end) = Time::HiRes::time ();
@@ -429,6 +429,11 @@ if (defined $outfile){
 }
 notify('debug', "rtp output file is set to ${outfile}");
 
+sub dtmf {
+  my ($event, $duration) = @_;
+  notify('debug', "received DTMF ${event} for duration of ${duration}");
+}
+
 for my $to (@tos){
   notify("debug", " calling ${to}");
   $callstart = Time::HiRes::time ();
@@ -442,6 +447,7 @@ for my $to (@tos){
 			  cb_final => \&final,
 #			  cb_preliminary => \&prelim,
 			  cb_noanswer => \&noanswer,
+			  cb_dtmf => \&dtmf,
 			);
 
   # mainloop until other party hangs up or we hang up after $hangup seconds
