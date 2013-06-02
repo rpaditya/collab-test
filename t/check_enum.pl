@@ -508,7 +508,6 @@ if ($callstatus != $expected_return_status){
     print "-";
   }
   print "\n";
-  exit $callstatus;
 }
 
 ### Add enum lookup code ###
