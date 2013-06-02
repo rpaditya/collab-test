@@ -49,10 +49,11 @@ my $msgbuffer = "";
 
 my ($proxy,$outfile,$registrar,$username,$password,$hangup,$local_leg,$contact);
 my (@routes,$debug, $verbose);
-my ($from, $to, $num, @tos);
+my ($from, $to, $num, @tos, $expected_return_status);
 my(%opts);
 GetOptions(%opts,
 	'd|debug:i' => \$debug,
+	'e|expected:i' => \$expected_return_status,
 	'h|help' => sub { usage() },
 	'P|proxy=s' => \$proxy,
 	'R|registrar=s' => \$registrar,
@@ -86,6 +87,14 @@ Net::SIP::Debug->level( $verbose || 0 ) if defined $verbose;
 Net::SIP::Debug->import(\&prenotify);
 
 $config->{'DEBUG'} = $debug;
+
+&prenotify("running ${script_command}");
+
+my $callstatus = 100;
+if (defined $expected_return_status){
+} else {
+  $expected_return_status = 200;
+}
 
 sub update {
   my($type) = shift(@_);
@@ -179,6 +188,7 @@ Makes SIP call from FROM to TO, optional record data
 and optional hang up after some time
 Options:
   -d|--debug [level]           Enable debugging
+  -e|--expected=[sip status]   SIP call status code
   -v|--verbose                 Verbose (show debug info even if no error)
   -h|--help                    Help (this info)
   -n +91803312465              number in E.164 format with starting "+"
@@ -267,7 +277,10 @@ if (defined $num && $num =~ /\+?\d+/){
   }
 
   if ($#tos < 0){
-    print STDERR "FAIL: No sip route found to ${num}\n";
+    my($lookup_err) = "FAIL in DNS lookup: No sip route found to ${num}";
+    notify('debug', $lookup_err);
+    $msgbuffer .= $lookup_err . "\n";
+    $callstatus = 488;
   }
 
 } elsif (defined $to){
@@ -287,8 +300,6 @@ if (defined $num && $num =~ /\+?\d+/){
 } else {
   usage( "no target; please define an e164 number to call or provide a sip to" );
 }
-
-&prenotify("running ${script_command}");
 
 # register at proxy if proxy given and no registrar
 $registrar ||= $proxy;
@@ -364,7 +375,7 @@ if ( $registrar && $registrar ne '-' ) {
 }
 
 my $stopvar;
-my $callstatus = 100;
+
 sub final {
   my ($status,$self,%info) = @_;
   my($end) = Time::HiRes::time ();
@@ -488,10 +499,14 @@ for my $to (@tos){
   update("sip", @timers);
 
   notify("debug", "CALL returned: ${callstatus}");
-  if ($callstatus != 200){
-    print "\n" . $msgbuffer . "\n";
-  }
 }
+
+# by default expected_return_status is 200
+if ($callstatus != $expected_return_status){
+  print "\n" . $msgbuffer . "\n";
+}
+
+exit $callstatus;
 
 ### Add enum lookup code ###
 ### from http://cpansearch.perl.org/src/JAMESGOL/asterisk-perl-1.03/examples/agi-enum.agi ###
