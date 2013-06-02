@@ -503,10 +503,13 @@ for my $to (@tos){
 
 # by default expected_return_status is 200
 if ($callstatus != $expected_return_status){
-  print "\n" . $msgbuffer . "\n";
+  print "\n" . $msgbuffer;
+  for (my $n=1;$n<=80;$n++){
+    print "-";
+  }
+  print "\n";
+  exit $callstatus;
 }
-
-exit $callstatus;
 
 ### Add enum lookup code ###
 ### from http://cpansearch.perl.org/src/JAMESGOL/asterisk-perl-1.03/examples/agi-enum.agi ###
