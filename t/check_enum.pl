@@ -88,8 +88,6 @@ Net::SIP::Debug->import(\&prenotify);
 
 $config->{'DEBUG'} = $debug;
 
-&prenotify("running ${script_command}");
-
 my $callstatus = 100;
 if (defined $expected_return_status){
 } else {
@@ -301,6 +299,9 @@ if (defined $num && $num =~ /\+?\d+/){
   usage( "no target; please define an e164 number to call or provide a sip to" );
 }
 
+# we run this here after all necessary args are added, don't move
+&prenotify("running ${script_command}");
+
 # register at proxy if proxy given and no registrar
 $registrar ||= $proxy;
 
@@ -503,6 +504,7 @@ for my $to (@tos){
 
 # by default expected_return_status is 200
 if ($callstatus != $expected_return_status){
+  print "\nERROR: Expected call status of ${expected_return_status} but got ${callstatus} instead\n";
   print "\n" . $msgbuffer;
   for (my $n=1;$n<=80;$n++){
     print "-";
