@@ -53,7 +53,7 @@ my ($from, $to, $num, @tos, $expected_return_status);
 my(%opts);
 GetOptions(%opts,
 	'd|debug:i' => \$debug,
-	'e|expected:i' => \$expected_return_status,
+	'e|expected:s' => \$expected_return_status,
 	'h|help' => sub { usage() },
 	'P|proxy=s' => \$proxy,
 	'R|registrar=s' => \$registrar,
@@ -89,9 +89,14 @@ Net::SIP::Debug->import(\&prenotify);
 $config->{'DEBUG'} = $debug;
 
 my $callstatus = 100;
+
+my(%expected);
 if (defined $expected_return_status){
+  for my $e (split(',', $expected_return_status)){
+    $expected{$e} = $e;
+  }
 } else {
-  $expected_return_status = 200;
+  $expected{200} = 200;
 }
 
 sub update {
@@ -186,7 +191,7 @@ Makes SIP call from FROM to TO, optional record data
 and optional hang up after some time
 Options:
   -d|--debug [level]           Enable debugging
-  -e|--expected=[sip status]   SIP call status code
+  -e|--expected=[sip status],XXX,XXX   SIP call status code (multiple separated by commas)
   -v|--verbose                 Verbose (show debug info even if no error)
   -h|--help                    Help (this info)
   -n +91803312465              number in E.164 format with starting "+"
@@ -503,8 +508,8 @@ for my $to (@tos){
 }
 
 # by default expected_return_status is 200
-if ($callstatus != $expected_return_status){
-  print "\nERROR: Expected call status of ${expected_return_status} but got ${callstatus} instead\n";
+if (! defined $expected{$callstatus}){
+  print "\nERROR: Expected call status of " . join(',', (keys %expected)) . " but got ${callstatus} instead\n";
   print "\n" . $msgbuffer;
   for (my $n=1;$n<=80;$n++){
     print "-";
