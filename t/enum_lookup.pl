@@ -10,7 +10,24 @@
 use strict;
 local $| = 1;
 
+use Getopt::Long qw(:config posix_default bundling);
+my(%opts);
 my($DEBUG) = 0;
+GetOptions(%opts,
+	'd|debug:i' => \$DEBUG,
+) || usage( "bad option" );
+
+sub usage {
+  	print STDERR "ERROR: @_\n" if @_;
+	print STDERR <<EOS;
+usage: $0 [ options ] E.164_number
+Does lookups to see if E.164_number is present in any enum tree
+and if so resolves it
+Options:
+  -d|--debug [level]           Enable debugging
+EOS
+	exit( @_ ? 1:0 );
+}
 
 use Net::DNS;
 my $res = Net::DNS::Resolver->new;
@@ -56,7 +73,7 @@ sub naptr_query {
 	my $name = reversenum($lookup) . '.' . $domain;
 
 	if ($DEBUG){
-	  print STDERR "looking up ${name}\n";
+	  print STDERR "looking up NAPTR for ${name}\n";
 	}
 
 	my $query = $dns->search($name, 'NAPTR');
@@ -90,7 +107,7 @@ sub naptr_query {
 		}
 	} else {
 	  if ($DEBUG){
-	    print STDERR $dns->errorstring . "\n";
+	    print STDERR "got back " . $dns->errorstring . "\n";
 	  }
 	}
 	return @hosts;
@@ -159,7 +176,11 @@ sub reversenum {
 
 	#remove all non numeric
 	$num =~ s/[^0-9]//g;
-	return join('.', split(/ */, reverse($num)));
+	my($numjoined) = join('.', split(/ */, reverse($num)));
+	if ($DEBUG){
+	  print STDERR " ${num} -> ${numjoined} \n";
+	}
+	return $numjoined;
 }
 
 
