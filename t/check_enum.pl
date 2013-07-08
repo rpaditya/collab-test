@@ -393,6 +393,9 @@ sub final {
   }
 
   my $setupComplete = ($end - $callstart);
+  if ($#timers >= 3 && $timers[2] == $hangup){
+    pop(@timers);
+  }
   push(@timers, $setupComplete);
   notify('debug', "pushing setupt ${setupComplete} onto timers");
 
@@ -484,6 +487,12 @@ for my $to (@tos){
     $ua->loop( \$stopvar );
   }
 ##
+
+  # if the call doesn't timeout but the setup never completes
+  # we need to add a setup time in any case
+  if ($#timers < 3 && $callstatus == 100){
+    push(@timers, $hangup);
+  }
 
   my($end) = Time::HiRes::time ();
   # totalcallt
