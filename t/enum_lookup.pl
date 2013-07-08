@@ -10,6 +10,8 @@
 use strict;
 local $| = 1;
 
+use Time::HiRes;
+
 use Getopt::Long qw(:config posix_default bundling);
 my(%opts);
 my($DEBUG) = 0;
@@ -64,7 +66,7 @@ LLI
     }
   }
 }
-
+my(@timers);
 
 sub naptr_query {
 	my ($lookup, $domain) = @_;
@@ -73,7 +75,9 @@ sub naptr_query {
 	my $name = reversenum($lookup) . '.' . $domain;
 
 	if ($DEBUG){
-	  print STDERR "looking up NAPTR for ${name}\n";
+	  my($start) = Time::HiRes::time();
+	  push(@timers,$start);
+	  print STDERR "${start}: looking up NAPTR for ${name}\n";
 	}
 
 	my $query = $dns->search($name, 'NAPTR');
@@ -94,20 +98,27 @@ sub naptr_query {
 			my($host);
 			if ($rr->replacement) {
 			  if ($DEBUG){
-			    print STDERR $rr->replacement . "\n";
+			    my($end) = Time::HiRes::time();
+			    push(@timers,$end);
+			    print STDERR "${end}: " . $rr->replacement . "\n";
 			  }
 			  $host = naptr_replace($rr->replacement, $rr->regexp, $lookup);
 			} else {
 				$host = naptr_regexp($rr->regexp, $lookup);
 			}
 			if ($DEBUG){
-			  print STDERR $order . ": " . $pref . " " . $host . $rr->regexp . " " . $rr->replacement . "\n";
+			  my($end) = Time::HiRes::time();
+			  push(@timers,$end);
+
+			  print STDERR "${end}: " . $order . ": " . $pref . " " . $host . $rr->regexp . " " . $rr->replacement . "\n";
 			}
 			$hosts[$order][$pref] = $host;
 		}
 	} else {
 	  if ($DEBUG){
-	    print STDERR "got back " . $dns->errorstring . "\n";
+	    my($end) = Time::HiRes::time();
+	    push(@timers,$end);
+	    print STDERR "${end}: got back " . $dns->errorstring . "\n";
 	  }
 	}
 	return @hosts;
