@@ -1,5 +1,57 @@
 version: 1
 
+dn: CN=Arbor Lakes 2-2215,OU=collab,DC=umich,DC=edu
+objectClass: top
+objectClass: videoUnit
+cn: Arbor Lakes 2-2215
+description: Collaboration video unit in Arbor Lakes 2-2215
+displayName: Arbor Lakes 2-2215
+distinguishedName: CN=Arbor Lakes 2-2215,OU=collab,DC=umich,DC=edu
+givenName: AL2-2215
+name: Arbor Lakes 2-2215
+sn: AL2-2215
+telephoneNumber: +17347631843
+sipUri: +17347631843
+
+dn: CN=Arbor Lakes 2-2232,OU=collab,DC=umich,DC=edu
+objectClass: top
+objectClass: videoUnit
+cn: Arbor Lakes 2-2232
+description: Collaboration video unit in Arbor Lakes 2-2232
+displayName: Arbor Lakes 2-2232
+distinguishedName: CN=Arbor Lakes 2-2232,OU=collab,DC=umich,DC=edu
+givenName: AL2-2232
+name: Arbor Lakes 2-2232
+sn: AL2-2232
+telephoneNumber: +17347631843
+sipUri: +17347631843
+
+dn: CN=UM Bluejeans MCU,OU=collab,DC=umich,DC=edu
+objectClass: top
+objectClass: videoUnit
+cn: UM Bluejeans MCU
+description: UM Bluejeans MCU
+displayName: UM Bluejeans MCU
+distinguishedName: CN=UM Bluejeans MCU,OU=collab,DC=umich,DC=edu
+givenName: UM Bluejeans MCU
+name: UM Bluejeans MCU
+sn: UM Bluejeans MCU
+telephoneNumber: +17347631841
+sipUri: +17347631841
+
+dn: CN=R.P. (Adi) Aditya,OU=collab,DC=umich,DC=edu
+objectClass: top
+objectClass: videoUnit
+cn: R.P. (Adi) Aditya
+description: R.P. (Adi) Aditya videophone
+displayName: R.P. (Adi) Aditya videophone
+distinguishedName: CN=R.P. (Adi) Aditya,OU=collab,DC=umich,DC=edu
+givenName: Adi
+name: R.P. (Adi) Aditya
+sn: Aditya
+telephoneNumber: +17347632607
+sipUri: +17347632607
+
 dn: CN=John Doe,OU=Marketing,DC=Company,DC=com
 objectClass: top
 objectClass: person
