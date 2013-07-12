@@ -30,7 +30,11 @@ use Time::HiRes;
 use LWP::UserAgent;
 use Sys::Syslog;
 #Sys::Syslog::setlogsock('unix');
-use RRDs;
+
+# this is loaded by the calling script 
+# because in some cases we don't need it
+# as it might not be present on the server
+#use RRDs;
 
 $config->{'STEP'} = 300;
 $config->{'DEBUG'} = 0;
