@@ -1,0 +1,21 @@
+This is a sample LDAP server that works to setup a directory in SIP clients.
+It uses the pure perl LDAP server software:
+
+  Net::LDAP::SimpleServer
+
+The directory is a plain text LDIF file.
+
+Once you have the server running as "./ldapd.pl" with the sample
+directory.ldif file, you can check it as:
+
+  ldapsearch -x -h serverHostname.tld:20389 -b "objectClass=videoUnit,dc=umich,dc=edu" -s base sn='*AL*'
+
+and to configure it in a SIP client, ie. Bria, use:
+
+# works on Bria
+Server: serverHostname.tld:20389
+Authentication method: Anonymous
+Root DN: objectClass=videoUnit,dc=umich,dc=edu
+Search expression: (sn=*)
+
+
