@@ -96,7 +96,7 @@ sub naptr_query {
       }
 
       my($host);
-      if ($rr->replacement) {
+      if ($rr->replacement && $rr->replacement ne ".") {
 	if ($DEBUG) {
 	  my($end) = Time::HiRes::time();
 	  push(@timers,$end);
@@ -104,6 +104,11 @@ sub naptr_query {
 	}
 	$host = naptr_replace($rr->replacement, $rr->regexp, $lookup);
       } else {
+	if ($DEBUG) {
+	  my($end) = Time::HiRes::time();
+	  push(@timers,$end);
+	  print STDERR "${end}: RR-replacement value was undef or ., searching deeper\n";
+	}
 	$host = naptr_regexp($rr->regexp, $lookup);
       }
       if ($DEBUG) {
