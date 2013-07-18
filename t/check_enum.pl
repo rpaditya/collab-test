@@ -27,7 +27,6 @@ use Sys::Hostname;
 my($hostname) = hostname;
 
 use Time::HiRes;
-use RRDs;
 
 use Net::SIP;
 use Net::SIP::Util 'create_socket_to';
@@ -37,8 +36,17 @@ require "${ENV{'HOME'}}/lib/monitor.pl";
 our($config);
 $config->{'STEP'} = 3600;
 
+my($hasRRD) = 0;
+eval {
+  require RRDs;
+};
+unless ($@){
+  $hasRRD = 1;
+}
+
 # this is where we update the RRDs
 $config->{'dataDir'} = $ENV{'HOME'} . "/data/voip";
+
 my(@timers);
 my $callstart;
 my $msgbuffer = "";
@@ -115,23 +123,26 @@ sub update {
   $t = int($t);
 
   if ($config->{'DEBUG'}) {
+    notify('debug', "hasRRD is ${hasRRD}");
     my($msg) = "updateRRD(${RRD}, ${t}, " . join(", ", @vals) . ")";
     notify('debug', $msg);
   } else {
-    if (! -e $RRD) {
-      my($START) = time - (2 * $STEP);
+    if ($hasRRD){
+      if (! -e $RRD) {
+	my($START) = time - (2 * $STEP);
 
-      notify('info', "Creating $RRD with step ${STEP} starting at $START");
-      my($v, $msg) = RRD_create($RRD, $START, $STEP, $type);
-      if ($v) {
-	notify('err', "couldn't create $RRD because $msg");
-	return;
+	notify('info', "Creating $RRD with step ${STEP} starting at $START");
+	my($v, $msg) = RRD_create($RRD, $START, $STEP, $type);
+	if ($v) {
+	  notify('err', "couldn't create $RRD because $msg");
+	  return;
+	}
       }
-    }
 
-    my($rv, $errmsg) = updateRRD($RRD, $t, @vals);
-    if ($rv) {
-      notify('err', "error updating $RRD : ${errmsg}");
+      my($rv, $errmsg) = updateRRD($RRD, $t, @vals);
+      if ($rv) {
+	notify('err', "error updating $RRD : ${errmsg}");
+      }
     }
   }
 }
@@ -553,7 +564,7 @@ sub naptr_query {
 			}
 
 			my($host);
-			if ($rr->replacement) {
+			if ($rr->replacement && $rr->replacement ne ".") {
 			  notify("debug", $rr->replacement);
 			  $host = naptr_replace($rr->replacement, $rr->regexp, $lookup);
 			} else {
