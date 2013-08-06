@@ -32,6 +32,8 @@ use Net::SIP;
 use Net::SIP::Util 'create_socket_to';
 use Net::SIP::Debug;
 
+use URI::Escape;
+
 require "${ENV{'HOME'}}/lib/monitor.pl";
 our($config);
 $config->{'STEP'} = 3600;
@@ -56,7 +58,7 @@ my $msgbuffer = "";
 ###################################################
 
 my ($proxy,$outfile,$registrar,$username,$password,$hangup,$local_leg,$contact);
-my (@routes,$debug, $verbose);
+my (@routes,$debug, $verbose, $reportto);
 my ($from, $to, $num, @tos, $expected_return_status);
 my(%opts);
 GetOptions(%opts,
@@ -72,6 +74,7 @@ GetOptions(%opts,
 	'username=s' =>\$username,
 	'password=s' =>\$password,
 	'route=s' => \@routes,
+        'reportto=s' => \$reportto,
         'n|num=s' => \$num,
         'f|from=s' => \$from,
         't|to=s' => \$to,
@@ -122,12 +125,21 @@ sub update {
   my($t) = time;
   $t = int($t);
 
+  my($valstxt) = join(":", @vals);
   if ($config->{'DEBUG'}) {
-    notify('debug', "hasRRD is ${hasRRD}");
-    my($msg) = "updateRRD(${RRD}, ${t}, " . join(", ", @vals) . ")";
+    notify('debug', "hasRRD is ${hasRRD}: reportto is ${reportto}");
+    my($msg) = "updateRRD(${RRD}, ${t}, " . $valstxt . ")";
     notify('debug', $msg);
   } else {
-    if ($hasRRD){
+    if (defined $reportto && $reportto ne ""){
+      # url looks like http://server.tld/foo/bar/updateRRD?f=/path/to/RRD
+      # and we have to add . "$filename&vals=$ts:$ds1:$ds2:$ds3..."
+      my($url) = $reportto . uri_escape("enum${num}.rrd") . "&vals=" . uri_escape($valstxt);
+      my(@rval) = &check_httpd($url, undef, undef, 4);
+      if ($rval[1] != 204){
+	notify('err', "could not write  to ${url} : ${rval[1]} ${rval[2]}");
+      }
+    } elsif ($hasRRD){
       if (! -e $RRD) {
 	my($START) = time - (2 * $STEP);
 
@@ -217,6 +229,7 @@ Options:
   --username name              username for authorization
   --password pass              password for authorization
   --route host[:port]          add SIP route, can be specified multiple times
+  --reportto                   a http/s url that the stat update can be sent to instead of written to a local RRD, looks like http://server.tld/foo/bar/updateRRD?f=/path/to/RRD
 
 Examples:
   $0 -T 10 -O record.data sip:30\@192.168.178.4 sip:31\@192.168.178.1
