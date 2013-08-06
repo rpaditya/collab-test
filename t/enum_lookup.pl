@@ -14,9 +14,11 @@ use Time::HiRes;
 
 use Getopt::Long qw(:config posix_default bundling);
 my(%opts);
+my($genzones);
 my($DEBUG) = 0;
 GetOptions(%opts,
 	   'd|debug:i' => \$DEBUG,
+	   'g|genzones' => \$genzones,
 	  ) || usage( "bad option" );
 
 sub usage {
@@ -27,6 +29,7 @@ Does lookups to see if E.164_number is present in any enum tree
 and if so resolves it
 Options:
   -d|--debug [level]           Enable debugging
+  -g|--genzones                Generate wildcard zones for entire number
 EOS
   exit( @_ ? 1:0 );
 }
@@ -61,12 +64,42 @@ for my $t (@tree) {
 	  print <<LLI;
 $x $z $test[$x][$z]
 LLI
+
+	  if (defined $genzones){
+	    genz($num, $t, $x, $z, $test[$x][$z]);
+	  }
+
 	}
       }
     }
   }
 }
 my(@timers);
+
+sub genz {
+  my($n, $t, $priority, $weight, $dest) = @_;
+  my($name) = reversenum($n);
+  my(@digits) = split(/\./, $name);
+
+  if ($DEBUG){
+    print STDERR "Generating wildcards to complement exceptions\n";
+    print STDERR "starting at " . $name . "\n";
+  }
+
+  for (my $i=0;$i<=$#digits;$i++){
+    shift(@digits);
+    if ($DEBUG){
+      print STDERR "now at i=${i}: " . join('.', @digits) . "\n";
+    }
+    for (my $j=0; $j<=9; $j++){
+      if ($DEBUG){
+	print STDERR "now at j=${j}: " . join('.', @digits) . "\n";
+      }
+
+      print "*." . $j . "." . join('.', @digits) . "." . $t . " IN NAPTR ${priority} ${weight}  ${dest}\n";
+    }
+  }
+}
 
 sub naptr_query {
   my ($lookup, $domain) = @_;
