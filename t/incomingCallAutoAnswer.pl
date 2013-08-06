@@ -111,7 +111,7 @@ sub who {
 	  print "|\n";
 	}
 
-	if (-r $outfile){
+	if (defined $outfile && -r $outfile){
 	  if (defined $verbose){
 	    print "sending rtp ${outfile} \n";
 	  }
