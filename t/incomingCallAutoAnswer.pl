@@ -32,7 +32,7 @@ GetOptions(%opts,
 #       5.  Detailed debugging for programmers using Net::SIP.
 #       6.  Detailed debugging for core developers of Net::SIP.
 
-Net::SIP::Debug->level( $verbose || 0 ) if defined $verbose;
+Net::SIP::Debug->level( $debug || 0 ) if defined $debug;
 
 sub usage {
 	print STDERR "ERROR: @_\n" if @_;
