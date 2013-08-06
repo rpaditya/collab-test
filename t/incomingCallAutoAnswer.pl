@@ -103,26 +103,37 @@ sub who {
         my($from) = $request->get_header("From");
 
 	if (defined $verbose){
-	  print "${netid}";
+	  print "Received call from ${netid}";
 	  print "|${other}";
 	  print "|${method}";
 	  print "|${when}|${from}";
 	  print "|" . $request->dump(10);
 	  print "|\n";
-	  print "sending rtp ${outfile} \n";
 	}
 
 	if (-r $outfile){
+	  if (defined $verbose){
+	    print "sending rtp ${outfile} \n";
+	  }
 	  my $rtp = $call->rtp('media_send_recv',$outfile,1,"/dev/null");
+	} else {
+	  $call->rtp( 'recv_echo' );
 	}
-        $call->bye;
+        #$call->bye;
         return 1;
       }
 
+sub peerHangup {
+  if (defined $verbose){
+    print "peer hangup!\n";
+  }
+}
+
 &regme;
 $ua->listen(
-        cb_create => \&who,
-        #init_media => $ua->rtp( 'recv_echo' )
+	    cb_create => \&who,
+	    #init_media => $ua->rtp( 'recv_echo' ),
+	    recv_bye => \&peerHangup,
         );
 
 # Mainloop
