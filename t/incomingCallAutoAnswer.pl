@@ -117,7 +117,7 @@ sub who {
 	  }
 	  my $rtp = $call->rtp('media_send_recv',$outfile,1,"/dev/null");
 	} else {
-	  $call->rtp( 'recv_echo' );
+	  my $rtp = $call->rtp('media_recv_echo');
 	}
         #$call->bye;
         return 1;
