@@ -491,6 +491,10 @@ for my $to (@tos){
 			  cb_final => \&final,
 #			  cb_preliminary => \&prelim,
 			  cb_noanswer => \&noanswer,
+#
+# https://rt.cpan.org/Public/Bug/Display.html?id=34576
+#
+			  ring_time => 6,
 			  cb_dtmf => \&dtmf,
 			);
 
@@ -559,7 +563,9 @@ sub naptr_query {
 	my $dns = Net::DNS::Resolver->new;
 	my $name = reversenum($lookup) . '.' . $domain;
 
-	notify("debug", "looking up ${name}");
+	my $namelookup = "looking up ${name}";
+	notify("debug", $namelookup);
+	$msgbuffer .= $namelookup . "\n";
 
 	my $query = $dns->search($name, 'NAPTR');
 	my @hosts;
