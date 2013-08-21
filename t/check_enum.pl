@@ -58,7 +58,7 @@ my $msgbuffer = "";
 ###################################################
 
 my ($proxy,$outfile,$registrar,$username,$password,$hangup,$local_leg,$contact);
-my (@routes,$debug, $verbose, $reportto);
+my (@routes,$debug, $verbose, $reportto, $repeat);
 my ($from, $to, $num, @tos, $expected_return_status);
 my(%opts);
 GetOptions(%opts,
@@ -75,6 +75,7 @@ GetOptions(%opts,
 	'password=s' =>\$password,
 	'route=s' => \@routes,
         'reportto=s' => \$reportto,
+        'repeat=i' => \$repeat,
         'n|num=s' => \$num,
         'f|from=s' => \$from,
         't|to=s' => \$to,
@@ -478,80 +479,93 @@ sub dtmf {
   notify('debug', "received DTMF ${event} for duration of ${duration}");
 }
 
-for my $to (@tos){
-  notify("debug", " calling ${to}");
-  $callstart = Time::HiRes::time ();
-
-##
-  my $call = $ua->invite( $to,
-			  # echo back, use -1 instead of 0 for not echoing back
-			  init_media => $ua->rtp( 'media_recv_echo', $outfile, 0),
-#			  recv_bye => \&peerHangup,
-			  recv_bye => \$peer_hangup,
-			  cb_final => \&final,
-#			  cb_preliminary => \&prelim,
-			  cb_noanswer => \&noanswer,
-#
-# https://rt.cpan.org/Public/Bug/Display.html?id=34576
-#
-			  ring_time => 6,
-			  cb_dtmf => \&dtmf,
-			);
-
-  # mainloop until other party hangs up or we hang up after $hangup seconds
-  # add_timer ( WHEN, CALLBACK, [ REPEAT ] )
-  if (! $peer_hangup){
-    $ua->add_timer( $hangup, \$stopvar ) if $hangup;
-  }
-
-  # loop ( [ TIMEOUT, @STOPVAR ] ), stop if any var in @STOPVAR evals to true
-  $ua->loop(\$stopvar, \$peer_hangup );
-
-  # timeout, I need to hang up
-  if ( $stopvar ) {
-    $stopvar = undef;
-    $call->bye( cb_final => \&final );
-    $stopvar = 1;
-    $ua->loop( \$stopvar );
-  }
-##
-
-  # if the call doesn't timeout but the setup never completes
-  # we need to add a setup time in any case
-  if ($#timers < 3 && $callstatus == 100){
-    push(@timers, $hangup);
-  }
-
-  my($end) = Time::HiRes::time ();
-  # totalcallt
-  my($totalcallt) = ($end - $callstart);
-  push(@timers, $totalcallt);
-  notify('debug', "pushing total call t ${totalcallt} onto timers");
-  # status
-  push(@timers, $callstatus);
-  notify('debug', "pushing status of ${callstatus} onto timers");
-
-  # RTP filesize 
-  if (-e $outfile){
-    my($size) = getFileSizeB($outfile);
-    push(@timers, $size);
-  } else {
-    push(@timers, 0);
-  }
-
-  update("sip", @timers);
-
-  notify("debug", "CALL returned: ${callstatus}");
+if (defined $repeat && $repeat > 1){
+} else {
+  $repeat = 1;
 }
 
-# by default expected_return_status is 200
-if (! defined $expected{$callstatus}){
-  print "\nERROR: Expected call status of " . join(',', (keys %expected)) . " but got ${callstatus} instead\n";
-  print "\n" . $msgbuffer;
-  for (my $n=1;$n<=80;$n++){
-    print "-";
+for (my $run = 1; $run <= $repeat; $run++) {
+  if ($run > 1) {
+    $msgbuffer .= " run #${run}\n";
   }
-  print "\n";
+
+  for my $to (@tos) {
+    notify("debug", " calling ${to}");
+    $callstart = Time::HiRes::time ();
+
+    ##
+    my $call = $ua->invite( $to,
+			    # echo back, use -1 instead of 0 for not echoing back
+			    init_media => $ua->rtp( 'media_recv_echo', $outfile, 0),
+			    #			  recv_bye => \&peerHangup,
+			    recv_bye => \$peer_hangup,
+			    cb_final => \&final,
+			    #			  cb_preliminary => \&prelim,
+			    cb_noanswer => \&noanswer,
+			    #
+			    # https://rt.cpan.org/Public/Bug/Display.html?id=34576
+			    #
+			    ring_time => 6,
+			    cb_dtmf => \&dtmf,
+			  );
+
+    # mainloop until other party hangs up or we hang up after $hangup seconds
+    # add_timer ( WHEN, CALLBACK, [ REPEAT ] )
+    if (! $peer_hangup) {
+      $ua->add_timer( $hangup, \$stopvar ) if $hangup;
+    }
+
+    # loop ( [ TIMEOUT, @STOPVAR ] ), stop if any var in @STOPVAR evals to true
+    $ua->loop(\$stopvar, \$peer_hangup );
+
+    # timeout, I need to hang up
+    if ( $stopvar ) {
+      $stopvar = undef;
+      $call->bye( cb_final => \&final );
+      $stopvar = 1;
+      $ua->loop( \$stopvar );
+    }
+    ##
+
+    # if the call doesn't timeout but the setup never completes
+    # we need to add a setup time in any case
+    if ($#timers < 3 && $callstatus == 100) {
+      push(@timers, $hangup);
+    }
+
+    my($end) = Time::HiRes::time ();
+    # totalcallt
+    my($totalcallt) = ($end - $callstart);
+    push(@timers, $totalcallt);
+    notify('debug', "pushing total call t ${totalcallt} onto timers");
+    # status
+    push(@timers, $callstatus);
+    notify('debug', "pushing status of ${callstatus} onto timers");
+
+    # RTP filesize 
+    if (-e $outfile) {
+      my($size) = getFileSizeB($outfile);
+      push(@timers, $size);
+    } else {
+      push(@timers, 0);
+    }
+
+    update("sip", @timers);
+
+    notify("debug", "CALL returned: ${callstatus}");
+  }
+
+  # by default expected_return_status is 200
+  if (! defined $expected{$callstatus}) {
+    print "\nERROR: Expected call status of " . join(',', (keys %expected)) . " but got ${callstatus} instead\n";
+    print "\n" . $msgbuffer;
+    for (my $n=1;$n<=80;$n++) {
+      print "-";
+    }
+    print "\n";
+    $msgbuffer = "";
+  }
+
 }
 
 ### Add enum lookup code ###
