@@ -57,6 +57,8 @@ my $msgbuffer = "";
 # Get options
 ###################################################
 
+# for now Net::SIP::Leg::sendto doesn't handle TCP correctly
+my ($proto) = "udp";
 my ($proxy,$outfile,$registrar,$username,$password,$hangup,$local_leg,$contact);
 my (@routes,$debug, $verbose, $reportto, $repeat);
 my ($from, $to, $num, @tos, $expected_return_status);
@@ -355,7 +357,7 @@ if ( $local_host ) {
 	$addr = inet_ntoa( $addr );
 
 	$leg = IO::Socket::INET->new(
-		Proto => 'udp',
+		Proto => $proto,
 		LocalAddr => $addr,
 		LocalPort => $local_port || 5060,
 	);
@@ -363,7 +365,7 @@ if ( $local_host ) {
 	# if no port given and port 5060 is already used try another one
 	if ( !$leg && !$local_port ) {
 		$leg = IO::Socket::INET->new(
-			Proto => 'udp',
+			Proto => $proto,
 			LocalAddr => $addr,
 			LocalPort => 0
 		) || Vdie ("cannot create leg at $addr: $!",3);
