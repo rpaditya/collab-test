@@ -291,13 +291,16 @@ if (defined $num && $num =~ /\+?\d+/){
 	  my $y = @$aref - 1;
 	  for my $z ( 0 .. $y ) {
 	    if ($test[$x][$z]) {
-	      notify("debug", "${x} ${z} $test[$x][$z]");
+	      notify("debug", "found candidate ${x} ${z} $test[$x][$z]");
 	      # only try sip calls
-	      if ($test[$x][$z] =~ /^sip\:/i){
+	      if ($test[$x][$z] =~ /^sips?\:/i){
 		push(@tos, $test[$x][$z]);
+		notify('debug', "pushed sip dest $test[$x][$z] into tos");
 		push(@timers, $nslookupt);
 		notify('debug', "pushed nslookupt ${nslookupt} onto timers");
 		last LOOKUP;
+	      } else {
+		notify('debug', "rejected $test[$x][$z] for not being sip");
 	      }
 	    }
 	  }
