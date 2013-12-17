@@ -96,7 +96,17 @@ sub genz {
 	print STDERR "now at j=${j}: " . join('.', @digits) . "\n";
       }
 
-      print "*." . $j . "." . join('.', @digits) . "." . $t . " IN NAPTR ${priority} ${weight}  ${dest}\n";
+# generic BIND format
+#      print "*." . $j . "." . join('.', @digits) . "." . $t . " IN NAPTR ${priority} ${weight}  ${dest}\n";
+
+      my($ttl) = 3600;
+#      my($regexp) = '!^(.*)$!h323:\\1@h323.video.collab.it.umich.edu!';
+      my($regexp) = '!^(.*)$!sip:\\1@enum.voice.collab.it.umich.edu!';
+
+# Proteus bulk csv upload format
+#add, srv.example.com., 3600, SRV, 10 0 50 host1.example.com, An SRV record
+#add, *.1.6.2.3.6.7.4.3.7.1.nrenum.net., 3600, NAPTR, 100 10 E2U+email !^.*$!mailto:information@example.com!i . A
+      print "add, *." . $j . "." . join('.', @digits) . "." . $t . ", ${ttl}, NAPTR, ${priority} ${weight} E2U+sip ${regexp} . u\n";
     }
   }
 }
