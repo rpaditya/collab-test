@@ -40,8 +40,8 @@ my $res = Net::DNS::Resolver->new;
 my @PROTOCOLS = (
 		 'iax',
 		 'sip',
-		 'tel' 
-		 #	'h323'
+		 'tel',
+		 'h323',
 		);
 
 
@@ -56,9 +56,18 @@ chomp $num;
 
 for my $t (@tree) {
   my(@test) = naptr_query($num, $t);
-  for my $x ( 0 .. $#test ) {
+  for my $x ( 0 .. ($#test) ) {
+    if ($DEBUG){
+      print STDERR "DEBUG: x loop step " . $x . "\n";
+    }
     if (my $aref = $test[$x]) {
+      if ($DEBUG){
+	print STDERR "DEBUG: " . join('|', $test[$x]) . "\n";
+      }
       my $y = @$aref - 1;
+      if ($DEBUG){
+	print STDERR "DEBUG: y loop step " . $y . "\n";
+      }
       for my $z ( 0 .. $y ) {
 	if ($test[$x][$z]) {
 	  print <<LLI;
@@ -140,19 +149,21 @@ sub naptr_query {
 
       my($host);
       if ($rr->replacement && $rr->replacement ne ".") {
+	$host = naptr_replace($rr->replacement, $rr->regexp, $lookup);
 	if ($DEBUG) {
 	  my($end) = Time::HiRes::time();
 	  push(@timers,$end);
 	  print STDERR "${end}: " . $rr->replacement . "\n";
+	  print STDERR "DEBUG: " . $host;
 	}
-	$host = naptr_replace($rr->replacement, $rr->regexp, $lookup);
       } else {
+	$host = naptr_regexp($rr->regexp, $lookup);
 	if ($DEBUG) {
 	  my($end) = Time::HiRes::time();
 	  push(@timers,$end);
 	  print STDERR "${end}: RR-replacement value was undef or ., searching deeper\n";
+	  print STDERR "DEBUG: " . $host;
 	}
-	$host = naptr_regexp($rr->regexp, $lookup);
       }
       if ($DEBUG) {
 	my($end) = Time::HiRes::time();
