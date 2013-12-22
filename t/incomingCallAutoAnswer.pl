@@ -111,15 +111,14 @@ sub who {
 	  print "|\n";
 	}
 
-	if (defined $outfile && -r $outfile){
-	  if (defined $verbose){
-	    print "sending rtp ${outfile} \n";
-	  }
-	  my $rtp = $call->rtp('media_send_recv',$outfile,1,"/dev/null");
-	} else {
-	  my $rtp = $call->rtp('media_recv_echo');
-	}
-        #$call->bye;
+#	if (defined $outfile && -r $outfile){
+#	  if (defined $verbose){
+#	    print "sending rtp ${outfile} \n";
+#	  }
+#	  my $rtp = $call->rtp('media_send_recv',$outfile,1,"/dev/null");
+#	} else {
+#	  my $rtp = $call->rtp('media_recv_echo');
+#	}
         return 1;
       }
 
@@ -130,11 +129,18 @@ sub peerHangup {
 }
 
 &regme;
+my $call_closed;
 $ua->listen(
 	    cb_create => \&who,
-	    #init_media => $ua->rtp( 'recv_echo' ),
-	    recv_bye => \&peerHangup,
-        );
+	    cb_established => sub { print( 'call established' ) },
+	    cb_cleanup => sub {
+	      print ( 'call cleaned up' );
+	      $call_closed = 1;
+	    },  
+            init_media => $ua->rtp( 'recv_echo' ),
+            recv_bye => \&peerHangup,
+	   );
+
 
 # Mainloop
-$ua->loop;
+$ua->loop();
