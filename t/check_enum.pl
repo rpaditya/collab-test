@@ -61,12 +61,13 @@ my $msgbuffer = "";
 my ($proto) = "udp";
 my ($proxy,$outfile,$registrar,$username,$password,$hangup,$local_leg,$contact);
 my (@routes,$debug, $verbose, $reportto, $repeat);
-my ($from, $to, $num, @tos, $expected_return_status);
+my ($from, $to, $num, @tos, $expected_return_status, $note);
 my(%opts);
 GetOptions(%opts,
 	'd|debug:i' => \$debug,
 	'e|expected:s' => \$expected_return_status,
 	'h|help' => sub { usage() },
+        'N|Note=s' => \$note,
 	'P|proxy=s' => \$proxy,
 	'R|registrar=s' => \$registrar,
 	'O|outfile=s' => \$outfile,
@@ -336,6 +337,9 @@ if (defined $num && $num =~ /\+?\d+/){
 
 # we run this here after all necessary args are added, don't move
 &prenotify("running ${script_command}");
+if (defined $note && $note ne ""){
+  &prenotify("Note: ${note}");
+}
 
 # register at proxy if proxy given and no registrar
 $registrar ||= $proxy;
