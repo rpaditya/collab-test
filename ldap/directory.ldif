@@ -26,7 +26,7 @@ sn: AL2-2232
 telephoneNumber: +17347631843
 sipUri: +17347631843
 
-dn: CN=UM Bluejeans MCU,OU=collab,DC=umich,DC=edu
+dn: CN=UM Bluejeans MCU,OU=collab,dc=umich,dc=edu
 objectClass: top
 objectClass: videoUnit
 cn: UM Bluejeans MCU
@@ -39,7 +39,7 @@ sn: UM Bluejeans MCU
 telephoneNumber: +17347631841
 sipUri: +17347631841
 
-dn: CN=R.P. (Adi) Aditya,OU=collab,DC=umich,DC=edu
+dn: CN=R.P. (Adi) Aditya,ou=collab,dc=umich,dc=edu
 objectClass: top
 objectClass: videoUnit
 cn: R.P. (Adi) Aditya
@@ -49,6 +49,8 @@ distinguishedName: CN=R.P. (Adi) Aditya,OU=collab,DC=umich,DC=edu
 givenName: Adi
 name: R.P. (Adi) Aditya
 sn: Aditya
+mail: rpaditya@umich.edu
+facsimileTelephoneNumber: +17346157540
 telephoneNumber: +17347632607
 sipUri: +17347632607
 
